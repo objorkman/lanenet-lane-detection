@@ -8,6 +8,7 @@
 """
 LaneNet model post process
 """
+import os
 import os.path as ops
 import math
 
@@ -21,6 +22,7 @@ from local_utils.config_utils import parse_config_utils
 
 CFG = parse_config_utils.lanenet_cfg
 
+YML_PATH="{}/dependencies/lanenet-lane-detection/data/tusimple_ipm_remap.yml".format(os.getenv("PYLOT_HOME"))
 
 def _morphological_process(image, kernel_size=5):
     """
@@ -260,7 +262,7 @@ class LaneNetPostProcessor(object):
     """
     lanenet post process for lane generation
     """
-    def __init__(self, ipm_remap_file_path='./data/tusimple_ipm_remap.yml'):
+    def __init__(self, ipm_remap_file_path=YML_PATH):
         """
 
         :param ipm_remap_file_path: ipm generate file path
@@ -340,6 +342,7 @@ class LaneNetPostProcessor(object):
                 'mask_image': None,
                 'fit_params': None,
                 'source_image': None,
+                'lanes': [],
             }
 
         # lane line fit
@@ -382,6 +385,7 @@ class LaneNetPostProcessor(object):
 
             src_lane_pts.append(lane_pts)
 
+        lanes = []
         # tusimple test data sample point along y axis every 10 pixels
         source_image_width = source_image.shape[1]
         for index, single_lane_pts in enumerate(src_lane_pts):
@@ -393,6 +397,7 @@ class LaneNetPostProcessor(object):
             else:
                 raise ValueError('Wrong data source now only support tusimple')
             step = int(math.floor((end_plot_y - start_plot_y) / 10))
+            lane = []
             for plot_y in np.linspace(start_plot_y, end_plot_y, step):
                 diff = single_lane_pt_y - plot_y
                 fake_diff_bigger_than_zero = diff.copy()
@@ -422,13 +427,17 @@ class LaneNetPostProcessor(object):
                 if interpolation_src_pt_x > source_image_width or interpolation_src_pt_x < 10:
                     continue
 
+                lane.append((int(interpolation_src_pt_x),
+                             int(interpolation_src_pt_y)))
                 lane_color = self._color_map[index].tolist()
                 cv2.circle(source_image, (int(interpolation_src_pt_x),
                                           int(interpolation_src_pt_y)), 5, lane_color, -1)
+            lanes.append(lane)
         ret = {
             'mask_image': mask_image,
             'fit_params': fit_params,
             'source_image': source_image,
+            'lanes': lanes,
         }
 
         return ret

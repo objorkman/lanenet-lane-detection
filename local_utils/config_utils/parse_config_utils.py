@@ -14,6 +14,8 @@ import json
 import codecs
 from ast import literal_eval
 
+CFG_PATH="{}/dependencies/lanenet-lane-detection/config/tusimple_lanenet.yaml".format(os.getenv("PYLOT_HOME"))
+
 
 class Config(dict):
     """
@@ -222,7 +224,7 @@ class Config(dict):
         return json.dump(origin_dict, f_obj)
 
 
-lanenet_cfg = Config(config_path='./config/tusimple_lanenet.yaml')
+lanenet_cfg = Config(config_path=CFG_PATH)
 
 
 if __name__ == '__main__':

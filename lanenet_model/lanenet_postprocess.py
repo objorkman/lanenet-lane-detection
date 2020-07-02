@@ -13,7 +13,7 @@ import os.path as ops
 import math
 
 import cv2
-import glog as log
+#import glog as log
 import numpy as np
 from sklearn.cluster import DBSCAN
 from sklearn.preprocessing import StandardScaler
@@ -171,7 +171,7 @@ class _LaneNetCluster(object):
             features = StandardScaler().fit_transform(embedding_image_feats)
             db.fit(features)
         except Exception as err:
-            log.error(err)
+            #log.error(err)
             ret = {
                 'origin_features': None,
                 'cluster_nums': 0,

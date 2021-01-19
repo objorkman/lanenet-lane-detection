@@ -22,7 +22,7 @@ from local_utils.config_utils import parse_config_utils
 
 CFG = parse_config_utils.lanenet_cfg
 
-YML_PATH="{}/dependencies/lanenet-lane-detection/data/tusimple_ipm_remap.yml".format(os.getenv("PYLOT_HOME"))
+YML_PATH="{}/dependencies/lanenet/data/tusimple_ipm_remap.yml".format(os.getenv("PYLOT_HOME"))
 
 def _morphological_process(image, kernel_size=5):
     """

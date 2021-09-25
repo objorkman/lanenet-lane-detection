@@ -43,22 +43,22 @@ def discriminative_loss_single(
     # calculate instance nums
     unique_labels, unique_id, counts = tf.unique_with_counts(correct_label)
     counts = tf.cast(counts, tf.float32)
-    num_instances = tf.size(unique_labels)
+    num_instances = tf.size(input=unique_labels)
 
     # calculate instance pixel embedding mean vec
-    segmented_sum = tf.unsorted_segment_sum(
+    segmented_sum = tf.math.unsorted_segment_sum(
         reshaped_pred, unique_id, num_instances)
-    mu = tf.div(segmented_sum, tf.reshape(counts, (-1, 1)))
+    mu = tf.compat.v1.div(segmented_sum, tf.reshape(counts, (-1, 1)))
     mu_expand = tf.gather(mu, unique_id)
 
-    distance = tf.norm(tf.subtract(mu_expand, reshaped_pred), axis=1, ord=1)
+    distance = tf.norm(tensor=tf.subtract(mu_expand, reshaped_pred), axis=1, ord=1)
     distance = tf.subtract(distance, delta_v)
     distance = tf.clip_by_value(distance, 0., distance)
     distance = tf.square(distance)
 
-    l_var = tf.unsorted_segment_sum(distance, unique_id, num_instances)
-    l_var = tf.div(l_var, counts)
-    l_var = tf.reduce_sum(l_var)
+    l_var = tf.math.unsorted_segment_sum(distance, unique_id, num_instances)
+    l_var = tf.compat.v1.div(l_var, counts)
+    l_var = tf.reduce_sum(input_tensor=l_var)
     l_var = tf.divide(l_var, tf.cast(num_instances, tf.float32))
 
     mu_interleaved_rep = tf.tile(mu, [num_instances, 1])
@@ -71,19 +71,19 @@ def discriminative_loss_single(
 
     mu_diff = tf.subtract(mu_band_rep, mu_interleaved_rep)
 
-    intermediate_tensor = tf.reduce_sum(tf.abs(mu_diff), axis=1)
+    intermediate_tensor = tf.reduce_sum(input_tensor=tf.abs(mu_diff), axis=1)
     zero_vector = tf.zeros(1, dtype=tf.float32)
     bool_mask = tf.not_equal(intermediate_tensor, zero_vector)
-    mu_diff_bool = tf.boolean_mask(mu_diff, bool_mask)
+    mu_diff_bool = tf.boolean_mask(tensor=mu_diff, mask=bool_mask)
 
-    mu_norm = tf.norm(mu_diff_bool, axis=1, ord=1)
+    mu_norm = tf.norm(tensor=mu_diff_bool, axis=1, ord=1)
     mu_norm = tf.subtract(2. * delta_d, mu_norm)
     mu_norm = tf.clip_by_value(mu_norm, 0., mu_norm)
     mu_norm = tf.square(mu_norm)
 
-    l_dist = tf.reduce_mean(mu_norm)
+    l_dist = tf.reduce_mean(input_tensor=mu_norm)
 
-    l_reg = tf.reduce_mean(tf.norm(mu, axis=1, ord=1))
+    l_reg = tf.reduce_mean(input_tensor=tf.norm(tensor=mu, axis=1, ord=1))
 
     param_scale = 1.
     l_var = param_var * l_var
@@ -103,7 +103,7 @@ def discriminative_loss(prediction, correct_label, feature_dim, image_shape,
     """
 
     def cond(label, batch, out_loss, out_var, out_dist, out_reg, i):
-        return tf.less(i, tf.shape(batch)[0])
+        return tf.less(i, tf.shape(input=batch)[0])
 
     def body(label, batch, out_loss, out_var, out_dist, out_reg, i):
         disc_loss, l_var, l_dist, l_reg = discriminative_loss_single(
@@ -127,16 +127,16 @@ def discriminative_loss(prediction, correct_label, feature_dim, image_shape,
         dtype=tf.float32, size=0, dynamic_size=True)
 
     _, _, out_loss_op, out_var_op, out_dist_op, out_reg_op, _ = tf.while_loop(
-        cond, body, [
+        cond=cond, body=body, loop_vars=[
             correct_label, prediction, output_ta_loss, output_ta_var, output_ta_dist, output_ta_reg, 0])
     out_loss_op = out_loss_op.stack()
     out_var_op = out_var_op.stack()
     out_dist_op = out_dist_op.stack()
     out_reg_op = out_reg_op.stack()
 
-    disc_loss = tf.reduce_mean(out_loss_op)
-    l_var = tf.reduce_mean(out_var_op)
-    l_dist = tf.reduce_mean(out_dist_op)
-    l_reg = tf.reduce_mean(out_reg_op)
+    disc_loss = tf.reduce_mean(input_tensor=out_loss_op)
+    l_var = tf.reduce_mean(input_tensor=out_var_op)
+    l_dist = tf.reduce_mean(input_tensor=out_dist_op)
+    l_reg = tf.reduce_mean(input_tensor=out_reg_op)
 
     return disc_loss, l_var, l_dist, l_reg

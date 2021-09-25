@@ -57,7 +57,7 @@ class VGG16FCN(cnn_basenet.CNNBaseModel):
         :param need_layer_norm:
         :return:
         """
-        with tf.variable_scope(name):
+        with tf.compat.v1.variable_scope(name):
             conv = self.conv2d(
                 inputdata=input_tensor, out_channel=out_dims,
                 kernel_size=k_size, stride=stride,
@@ -89,14 +89,14 @@ class VGG16FCN(cnn_basenet.CNNBaseModel):
         :param name:
         :return:
         """
-        with tf.variable_scope(name_or_scope=name):
+        with tf.compat.v1.variable_scope(name_or_scope=name):
 
             deconv_weights_stddev = tf.sqrt(
                 tf.divide(tf.constant(2.0, tf.float32),
                           tf.multiply(tf.cast(previous_kernel_size * previous_kernel_size, tf.float32),
-                                      tf.cast(tf.shape(input_tensor)[3], tf.float32)))
+                                      tf.cast(tf.shape(input=input_tensor)[3], tf.float32)))
             )
-            deconv_weights_init = tf.truncated_normal_initializer(
+            deconv_weights_init = tf.compat.v1.truncated_normal_initializer(
                 mean=0.0, stddev=deconv_weights_stddev)
 
             deconv = self.deconv2d(
@@ -130,7 +130,7 @@ class VGG16FCN(cnn_basenet.CNNBaseModel):
         :param name:
         :return:
         """
-        with tf.variable_scope(name_or_scope=name):
+        with tf.compat.v1.variable_scope(name_or_scope=name):
             # encode stage 1
             conv_1_1 = self._vgg16_conv_stage(
                 input_tensor=input_tensor, k_size=3,
@@ -270,10 +270,10 @@ class VGG16FCN(cnn_basenet.CNNBaseModel):
 
         :return:
         """
-        with tf.variable_scope(name):
+        with tf.compat.v1.variable_scope(name):
 
             # decode part for binary segmentation
-            with tf.variable_scope(name_or_scope='binary_seg_decode'):
+            with tf.compat.v1.variable_scope(name_or_scope='binary_seg_decode'):
 
                 decode_stage_5_binary = self._net_intermediate_results['encode_stage_5_binary']['data']
 
@@ -300,9 +300,9 @@ class VGG16FCN(cnn_basenet.CNNBaseModel):
                 binary_final_logits_conv_weights_stddev = tf.sqrt(
                     tf.divide(tf.constant(2.0, tf.float32),
                               tf.multiply(4.0 * 4.0,
-                                          tf.cast(tf.shape(decode_stage_1_fuse)[3], tf.float32)))
+                                          tf.cast(tf.shape(input=decode_stage_1_fuse)[3], tf.float32)))
                 )
-                binary_final_logits_conv_weights_init = tf.truncated_normal_initializer(
+                binary_final_logits_conv_weights_init = tf.compat.v1.truncated_normal_initializer(
                     mean=0.0, stddev=binary_final_logits_conv_weights_stddev)
 
                 binary_final_logits = self.conv2d(
@@ -318,7 +318,7 @@ class VGG16FCN(cnn_basenet.CNNBaseModel):
                     'shape': binary_final_logits.get_shape().as_list()
                 }
 
-            with tf.variable_scope(name_or_scope='instance_seg_decode'):
+            with tf.compat.v1.variable_scope(name_or_scope='instance_seg_decode'):
 
                 decode_stage_5_instance = self._net_intermediate_results['encode_stage_5_instance']['data']
 
@@ -355,7 +355,7 @@ class VGG16FCN(cnn_basenet.CNNBaseModel):
         :param reuse:
         :return:
         """
-        with tf.variable_scope(name_or_scope=name, reuse=reuse):
+        with tf.compat.v1.variable_scope(name_or_scope=name, reuse=reuse):
             # vgg16 fcn encode part
             self._vgg16_fcn_encode(input_tensor=input_tensor, name='vgg16_encode_module')
             # vgg16 fcn decode part
@@ -368,7 +368,7 @@ if __name__ == '__main__':
     """
     test code
     """
-    test_in_tensor = tf.placeholder(dtype=tf.float32, shape=[1, 256, 512, 3], name='input')
+    test_in_tensor = tf.compat.v1.placeholder(dtype=tf.float32, shape=[1, 256, 512, 3], name='input')
     model = VGG16FCN(phase='train')
     ret = model.build_model(test_in_tensor, name='vgg16fcn')
     for layer_name, layer_info in ret.items():

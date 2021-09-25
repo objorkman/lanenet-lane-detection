@@ -44,7 +44,7 @@ class LaneNet(cnn_basenet.CNNBaseModel):
         :param reuse
         :return:
         """
-        with tf.variable_scope(name_or_scope=name, reuse=reuse):
+        with tf.compat.v1.variable_scope(name_or_scope=name, reuse=reuse):
             # first extract image features
             extract_feats_result = self._frontend.build_model(
                 input_tensor=input_tensor,
@@ -72,7 +72,7 @@ class LaneNet(cnn_basenet.CNNBaseModel):
         :param reuse:
         :return:
         """
-        with tf.variable_scope(name_or_scope=name, reuse=reuse):
+        with tf.compat.v1.variable_scope(name_or_scope=name, reuse=reuse):
             # first extract image features
             extract_feats_result = self._frontend.build_model(
                 input_tensor=input_tensor,

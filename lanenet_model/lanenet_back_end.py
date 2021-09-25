@@ -54,9 +54,9 @@ class LaneNetBackEnd(cnn_basenet.CNNBaseModel):
         :param classes_weights:
         :return:
         """
-        loss_weights = tf.reduce_sum(tf.multiply(onehot_labels, classes_weights), axis=3)
+        loss_weights = tf.reduce_sum(input_tensor=tf.multiply(onehot_labels, classes_weights), axis=3)
 
-        loss = tf.losses.softmax_cross_entropy(
+        loss = tf.compat.v1.losses.softmax_cross_entropy(
             onehot_labels=onehot_labels,
             logits=logits,
             weights=loss_weights
@@ -77,9 +77,9 @@ class LaneNetBackEnd(cnn_basenet.CNNBaseModel):
         :param reuse:
         :return:
         """
-        with tf.variable_scope(name_or_scope=name, reuse=reuse):
+        with tf.compat.v1.variable_scope(name_or_scope=name, reuse=reuse):
             # calculate class weighted binary seg loss
-            with tf.variable_scope(name_or_scope='binary_seg'):
+            with tf.compat.v1.variable_scope(name_or_scope='binary_seg'):
                 binary_label_onehot = tf.one_hot(
                     tf.reshape(
                         tf.cast(binary_label, tf.int32),
@@ -100,7 +100,7 @@ class LaneNetBackEnd(cnn_basenet.CNNBaseModel):
                 counts = tf.cast(counts, tf.float32)
                 inverse_weights = tf.divide(
                     1.0,
-                    tf.log(tf.add(tf.divide(counts, tf.reduce_sum(counts)), tf.constant(1.02)))
+                    tf.math.log(tf.add(tf.divide(counts, tf.reduce_sum(input_tensor=counts)), tf.constant(1.02)))
                 )
 
                 binary_segmenatation_loss = self._compute_class_weighted_cross_entropy_loss(
@@ -110,7 +110,7 @@ class LaneNetBackEnd(cnn_basenet.CNNBaseModel):
                 )
 
             # calculate class weighted instance seg loss
-            with tf.variable_scope(name_or_scope='instance_seg'):
+            with tf.compat.v1.variable_scope(name_or_scope='instance_seg'):
 
                 pix_bn = self.layerbn(
                     inputdata=instance_seg_logits, is_training=self._is_training, name='pix_bn')
@@ -130,7 +130,7 @@ class LaneNetBackEnd(cnn_basenet.CNNBaseModel):
                     )
 
             l2_reg_loss = tf.constant(0.0, tf.float32)
-            for vv in tf.trainable_variables():
+            for vv in tf.compat.v1.trainable_variables():
                 if 'bn' in vv.name or 'gn' in vv.name:
                     continue
                 else:
@@ -157,13 +157,13 @@ class LaneNetBackEnd(cnn_basenet.CNNBaseModel):
         :param reuse:
         :return:
         """
-        with tf.variable_scope(name_or_scope=name, reuse=reuse):
+        with tf.compat.v1.variable_scope(name_or_scope=name, reuse=reuse):
 
-            with tf.variable_scope(name_or_scope='binary_seg'):
+            with tf.compat.v1.variable_scope(name_or_scope='binary_seg'):
                 binary_seg_score = tf.nn.softmax(logits=binary_seg_logits)
-                binary_seg_prediction = tf.argmax(binary_seg_score, axis=-1)
+                binary_seg_prediction = tf.argmax(input=binary_seg_score, axis=-1)
 
-            with tf.variable_scope(name_or_scope='instance_seg'):
+            with tf.compat.v1.variable_scope(name_or_scope='instance_seg'):
 
                 pix_bn = self.layerbn(
                     inputdata=instance_seg_logits, is_training=self._is_training, name='pix_bn')
